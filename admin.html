@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jefferson's Kitchen | Admin Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:#11100e;
+  --panel:#1c1a16;
+  --gold:#d6ad63;
+  --text:#f7f3eb;
+  --muted:#aaa399;
+  --border:rgba(214,173,99,.2);
+}
+* {box-sizing:border-box;margin:0;padding:0}
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+}
+button,input,select {font:inherit}
+button {cursor:pointer}
+.layout {display:flex;min-height:100vh}
+.sidebar {
+  width:240px;
+  background:#181611;
+  border-right:1px solid var(--border);
+  padding:25px 18px;
+  flex-shrink:0;
+}
+.brand {
+  font:700 23px 'Playfair Display',serif;
+  color:var(--gold);
+  text-align:center;
+  margin-bottom:40px;
+}
+.brand small {
+  display:block;
+  font:10px 'DM Sans',sans-serif;
+  letter-spacing:4px;
+  color:var(--muted);
+}
+.nav-button {
+  display:block;
+  width:100%;
+  text-align:left;
+  background:transparent;
+  color:var(--muted);
+  border:0;
+  padding:15px;
+  border-radius:5px;
+  margin-bottom:8px;
+}
+.nav-button.active,.nav-button:hover {
+  background:rgba(214,173,99,.12);
+  color:var(--gold);
+}
+.main {flex:1;min-width:0;padding:30px}
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:30px;
+}
+h1,h2,h3 {font-family:'Playfair Display',serif}
+h1 {font-size:30px}
+.subtitle {color:var(--muted);font-size:13px;margin-top:5px}
+.admin-label {
+  border:1px solid var(--border);
+  color:var(--gold);
+  padding:9px 13px;
+  font-size:12px;
+  border-radius:4px;
+}
+.stats {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+  margin-bottom:30px;
+}
+.stat-card,.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:22px;
+}
+.stat-card p {color:var(--muted);font-size:12px}
+.stat-card h2 {color:var(--gold);font-size:30px;margin-top:8px}
+.section {display:none}
+.section.active {display:block}
+.panel-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:20px;
+}
+.panel-heading h2 {font-size:23px}
+.gold-button {
+  background:var(--gold);
+  color:#17130d;
+  border:0;
+  padding:11px 16px;
+  border-radius:4px;
+  font-weight:700;
+}
+.gold-button:hover {background:#f0d49b}
+.table-wrap {overflow-x:auto}
+table {width:100%;border-collapse:collapse;min-width:470px}
+th,td {
+  text-align:left;
+  padding:14px 10px;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+th {color:var(--gold);font-size:11px;text-transform:uppercase}
+td {color:#ddd5c8}
+.action {
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--gold);
+  padding:6px 9px;
+  border-radius:3px;
+  margin:2px;
+}
+.action.delete {color:#e58d80}
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+.field {margin-bottom:16px}
+.field label {
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:7px;
+}
+.field input,.field select {
+  width:100%;
+  padding:13px;
+  border:1px solid var(--border);
+  background:#11100e;
+  color:white;
+  border-radius:4px;
+}
+.form-actions {display:flex;gap:10px;flex-wrap:wrap}
+.cancel-button {
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:11px 16px;
+  border-radius:4px;
+}
+.empty {color:var(--muted);padding:20px;text-align:center}
+.status {
+  color:var(--gold);
+  font-size:11px;
+}
+.mobile-menu {
+  display:none;
+  background:transparent;
+  color:var(--gold);
+  border:1px solid var(--border);
+  padding:8px 12px;
+  border-radius:4px;
+}
+.notice {
+  color:var(--muted);
+  font-size:12px;
+  margin-top:15px;
+  line-height:1.6;
+}
+@media(max-width:750px) {
+  .sidebar {
+    position:fixed;
+    z-index:10;
+    top:0;bottom:0;left:-250px;
+    transition:.25s;
+  }
+  .sidebar.open {left:0}
+  .main {padding:20px 14px}
+  .mobile-menu {display:block}
+  .stats {grid-template-columns:1fr}
+  .form-grid {grid-template-columns:1fr}
+  h1 {font-size:24px}
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    JEFFERSON'S
+    <small>KITCHEN ADMIN</small>
+  </div>
+
+  <button class="nav-button active" onclick="showSection('overview',this)">▦ Dashboard</button>
+  <button class="nav-button" onclick="showSection('menu',this)">☷ Manage Menu</button>
+  <button class="nav-button" onclick="showSection('orders',this)">▤ Orders</button>
+  <button class="nav-button" onclick="showSection('add',this)">＋ Add Food</button>
+  <button class="nav-button" onclick="location.href='index.html'">↗ View Website</button>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <button class="mobile-menu" onclick="toggleSidebar()">☰ Menu</button>
+      <h1 style="margin-top:10px">Admin Dashboard</h1>
+      <p class="subtitle">Welcome to Jefferson's Kitchen management.</p>
+    </div>
+    <div class="admin-label">ADMIN DEMO</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section class="section active" id="overview">
+    <div class="stats">
+      <div class="stat-card">
+        <p>Total Menu Items</p>
+        <h2 id="menuStat">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Total Orders</p>
+        <h2 id="orderStat">0</h2>
+      </div>
+      <div class="stat-card">
+        <p>Order Revenue (demo)</p>
+        <h2 id="revenueStat">GH₵ 0</h2>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Welcome, Administrator</h2>
+      </div>
+      <p class="subtitle">
+        Manage your restaurant menu and review demonstration
+        orders from this dashboard.
+      </p>
+      <p class="notice">
+        This is a front-end demonstration. Real customer orders,
+        payments and staff accounts require a secure backend.
+      </p>
+    </div>
+  </section>
+
+  <!-- MENU MANAGEMENT -->
+  <section class="section" id="menu">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Manage Menu</h2>
+        <button class="gold-button" onclick="showSectionById('add')">+ Add Food</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Food</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="menuTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="section" id="orders">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Customer Orders</h2>
+        <span class="status">DEMO ORDERS</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="orderTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADD FOOD -->
+  <section class="section" id="add">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2 id="formTitle">Add New Food</h2>
+      </div>
+
+      <form id="foodForm">
+        <input type="hidden" id="editId">
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Food Name</label>
+            <input id="foodName" type="text" placeholder="e.g. Ghana Jollof" required>
+          </div>
+
+          <div class="field">
+            <label>Price (GH₵)</label>
+            <input id="foodPrice" type="number" min="1" step="0.01" placeholder="65" required>
+          </div>
+
+          <div class="field">
+            <label>Category</label>
+            <select id="foodCategory" required>
+              <option value="rice">Rice</option>
+              <option value="traditional">Traditional</option>
+              <option value="grill">Grills</option>
+              <option value="drinks">Drinks</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Description</label>
+            <input id="foodDescription" type="text" placeholder="Describe the meal" required>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="gold-button" type="submit" id="saveButton">Save Food</button>
+          <button class="cancel-button" type="button" onclick="resetForm()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+// DEMO DATA
+const defaultFoods = [
+  {id:1,name:"Special Jollof",price:65,category:"rice",description:"Ghana-style jollof rice."},
+  {id:2,name:"Fufu & Light Soup",price:75,category:"traditional",description:"Traditional Ghanaian soup."},
+  {id:3,name:"Banku & Tilapia",price:95,category:"traditional",description:"Grilled tilapia and banku."},
+  {id:4,name:"Waakye Special",price:55,category:"rice",description:"Waakye with egg and shito."},
+  {id:5,name:"Grilled Chicken",price:80,category:"grill",description:"Seasoned grilled chicken."},
+  {id:6,name:"Fresh Sobolo",price:18,category:"drinks",description:"Chilled hibiscus drink."}
+];
+
+function loadData(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+let foods = loadData("jk_admin_foods", defaultFoods);
+let orders = loadData("jk_admin_orders", []);
+
+function saveData() {
+  localStorage.setItem("jk_admin_foods", JSON.stringify(foods));
+  localStorage.setItem("jk_admin_orders", JSON.stringify(orders));
+}
+
+function showSection(id, button) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-button").forEach(b => b.classList.remove("active"));
+
+  document.getElementById(id).classList.add("active");
+  if (button) button.classList.add("active");
+
+  document.getElementById("sidebar").classList.remove("open");
+  updateDashboard();
+}
+
+function showSectionById(id) {
+  const buttons = document.querySelectorAll(".nav-button");
+  const index = {overview:0,menu:1,orders:2,add:3}[id];
+  showSection(id, buttons[index]);
+}
+
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+}
+
+function updateDashboard() {
+  document.getElementById("menuStat").textContent = foods.length;
+  document.getElementById("orderStat").textContent = orders.length;
+
+  const revenue = orders.reduce((sum, order) => sum + order.total, 0);
+  document.getElementById("revenueStat").textContent = "GH₵ " + revenue.toFixed(2);
+
+  renderFoods();
+  renderOrders();
+}
+
+function renderFoods() {
+  const table = document.getElementById("menuTable");
+  table.innerHTML = "";
+
+  if (foods.length === 0) {
+    table.innerHTML = '<tr><td colspan="4" class="empty">No food items yet.</td></tr>';
+    return;
+  }
+
+  foods.forEach(food => {
+    const row = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.textContent = food.name;
+
+    const category = document.createElement("td");
+    category.textContent = food.category;
+
+    const price = document.createElement("td");
+    price.textContent = "GH₵ " + Number(food.price).toFixed(2);
+
+    const actions = document.createElement("td");
+
+    const edit = document.createElement("button");
+    edit.className = "action";
+    edit.textContent = "Edit";
+    edit.onclick = () => editFood(food.id);
+
+    const remove = document.createElement("button");
+    remove.className = "action delete";
+    remove.textContent = "Delete";
+    remove.onclick = () => deleteFood(food.id);
+
+    actions.append(edit, remove);
+    row.append(name, category, price, actions);
+    table.appendChild(row);
+  });
+}
+
+function renderOrders() {
+  const table = document.getElementById("orderTable");
+  table.innerHTML = "";
+
+  if (orders.length === 0) {
+    table.innerHTML = '<tr><td colspan="5" class="empty">No demonstration orders yet.</td></tr>';
+    return;
+  }
+
+  orders.forEach((order, index) => {
+    const row = document.createElement("tr");
+
+    [order.id, order.customer, "GH₵ " + order.total.toFixed(2), order.status]
+      .forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+
+    const actionCell = document.createElement("td");
+    const button = document.createElement("button");
+    button.className = "action";
+    button.textContent = "Complete";
+    button.onclick = () => completeOrder(index);
+
+    actionCell.appendChild(button);
+    row.appendChild(actionCell);
+    table.appendChild(row);
+  });
+}
+
+document.getElementById("foodForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const id = document.getElementById("editId").value;
+  const food = {
+    id: id ? Number(id) : Date.now(),
+    name: document.getElementById("foodName").value.trim(),
+    price: Number(document.getElementById("foodPrice").value),
+    category: document.getElementById("foodCategory").value,
+    description: document.getElementById("foodDescription").value.trim()
+  };
+
+  if (!food.name || !food.description || food.price <= 0) {
+    alert("Please enter valid food details.");
+    return;
+  }
+
+  if (id) {
+    foods = foods.map(item => item.id === Number(id) ? food : item);
+  } else {
+    foods.push(food);
+  }
+
+  saveData();
+  resetForm();
+  updateDashboard();
+  showSectionById("menu");
+  alert("Food saved successfully!");
+});
+
+function editFood(id) {
+  const food = foods.find(item => item.id === id);
+  if (!food) return;
+
+  document.getElementById("editId").value = food.id;
+  document.getElementById("foodName").value = food.name;
+  document.getElementById("foodPrice").value = food.price;
+  document.getElementById("foodCategory").value = food.category;
+  document.getElementById("foodDescription").value = food.description;
+  document.getElementById("formTitle").textContent = "Edit Food";
+  document.getElementById("saveButton").textContent = "Update Food";
+
+  showSectionById("add");
+}
+
+function deleteFood(id) {
+  if (!confirm("Delete this food item?")) return;
+
+  foods = foods.filter(item => item.id !== id);
+  saveData();
+  updateDashboard();
+}
+
+function resetForm() {
+  document.getElementById("foodForm").reset();
+  document.getElementById("editId").value = "";
+  document.getElementById("formTitle").textContent = "Add New Food";
+  document.getElementById("saveButton").textContent = "Save Food";
+}
+
+function completeOrder(index) {
+  orders[index].status = "Completed";
+  saveData();
+  updateDashboard();
+}
+
+updateDashboard();
+</script>
+</body>
+</html>
